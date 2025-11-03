@@ -248,6 +248,12 @@ A comprehensive inventory of project assets, detailing the problem, solution, te
 * **Strategic Fit:** A critical internal asset. Its primary goal is to maximize the efficiency and effectiveness of all future AI interactions. (Greenlight - Urgent).
 
 ---
+#### **Handover Document Prompt (Status: PLANNING)**
+* **Description:** A meta-project to engineer a precise, robust prompt for generating high-fidelity conversation handover documents from context-limited AIs (e.g., Claude, Grok).
+* **Tech Stack:** (N/A - Prompt Engineering, Markdown).
+* **Strategic Fit:** A critical operational tool. It solves a major problem of data corruption, repetition, and incongruence, directly supporting the "Context Documents" project and all other AI-assisted work. (Greenlight - Urgent).
+
+---
 #### **Social Media Map (Status: PLANNING)**
 * **Description:** A strategic checklist and content plan. It will map all active social media accounts (LinkedIn, X, etc.) and define a posting strategy (what, where, how often) tailored to each platform.
 * **Tech Stack:** (Placeholder - likely a Markdown document in the `personal-strategy` repo).
