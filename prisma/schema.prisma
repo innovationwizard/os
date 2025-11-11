@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  role          Role           @default(CREATOR)
+  items         Item[]         @relation("CreatedBy")
+  statusChanges StatusChange[] @relation("ChangedBy")
+  createdAt     DateTime       @default(now())
+}
+
+model Item {
+  id              String         @id @default(cuid())
+  humanId         String         @unique @default(cuid())
+  title           String
+  rawInstructions String         @db.Text
+  type            ItemType       @default(TASK)
+  status          ItemStatus     @default(INBOX)
+  priority        Priority       @default(MEDIUM)
+  swimlane        Swimlane       @default(PROJECT)
+  labels          String[]
+  
+  // Relations
+  createdByUserId String
+  createdBy       User           @relation("CreatedBy", fields: [createdByUserId], references: [id])
+  projectId       String?
+  project         Item?          @relation("ProjectItems", fields: [projectId], references: [id])
+  subItems        Item[]         @relation("ProjectItems")
+  analyses        AIAnalysis[]
+  statusHistory   StatusChange[]
+  
+  // Freshness tracking
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  statusChangedAt DateTime       @default(now())  // When status last changed
+  lastProgressAt  DateTime?                       // Last meaningful progress
+  startedAt       DateTime?                       // When first moved to CREATE
+  completedAt     DateTime?                       // When moved to DONE
+  blockedAt       DateTime?                       // When moved to BLOCKED
+  
+  // Metrics
+  totalTimeInCreate Int?         @default(0)      // Total minutes in CREATE status
+  cycleCount        Int          @default(0)      // Times returned to TODO from CREATE
+  
+  @@index([status, statusChangedAt])              // For freshness queries
+  @@index([createdByUserId, createdAt])           // For user's items
+  @@index([swimlane, priority])                   // For kanban queries
+}
+
+model StatusChange {
+  id         String      @id @default(cuid())
+  itemId     String
+  item       Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  fromStatus ItemStatus?                          // null for initial creation
+  toStatus   ItemStatus
+  changedAt  DateTime    @default(now())
+  changedById String?
+  changedBy   User?      @relation("ChangedBy", fields: [changedById], references: [id])
+  reason      String?                             // Optional: why status changed
+  duration    Int?                                // Minutes in previous status
+  
+  @@index([itemId, changedAt])                    // For history queries
+}
+
+model AIAnalysis {
+  id           String       @id @default(cuid())
+  itemId       String
+  item         Item         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  analysisType AnalysisType
+  analysisText String       @db.Text
+  isRead       Boolean      @default(false)
+  confidence   Float?       @default(0.0)          // AI confidence score
+  createdAt    DateTime     @default(now())
+  
+  @@index([itemId, isRead])                        // For unread badges
+}
+
+model Rule {
+  id          String   @id @default(cuid())
+  ruleKey     String   @unique                     // e.g., "WIP_LIMIT"
+  ruleValue   String                               // e.g., "1"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model SystemMessage {
+  id        String   @id @default(cuid())
+  ruleKey   String                                 // Links to Rule.ruleKey
+  message   String
+  severity  Severity @default(INFO)
+  createdAt DateTime @default(now())
+}
+
+// Enums
+enum Role {
+  CREATOR
+  STAKEHOLDER
+}
+
+enum ItemType {
+  TASK
+  PROJECT
+  INFO
+}
+
+enum ItemStatus {
+  INBOX
+  TODO
+  CREATE
+  IN_REVIEW
+  BLOCKED
+  DONE
+  LIBRARY
+  ON_HOLD
+  COLD_STORAGE
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Swimlane {
+  EXPEDITE
+  PROJECT
+  HABIT
+  HOME
+}
+
+enum AnalysisType {
+  CONFLICT
+  DEPENDENCY
+  REDUNDANCY
+  RELATED
+  SUGGESTION
+}
+
+enum Severity {
+  ERROR
+  WARNING
+  INFO
+  SUCCESS
+}
