@@ -481,13 +481,14 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
       hasReceivedAudioRef.current = false
       recordingStartTimeRef.current = Date.now()
       
+      // Start speech recognition
       recognitionRef.current?.start()
       setIsRecording(true)
       setVoiceStatus("Listening… release to capture")
       skipClickRef.current = true
-      console.log("Voice recognition started")
+      console.log("[Voice] Speech recognition started")
     } catch (error) {
-      console.warn("Unable to start voice capture", error)
+      console.warn("[Voice] Unable to start voice capture", error)
       setVoiceStatus("Voice capture unavailable.")
       setIsRecording(false)
       skipClickRef.current = false
@@ -498,7 +499,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     if (!isRecording) return
     
     const recordingDuration = Date.now() - recordingStartTimeRef.current
-    console.log("User released button. Recording duration:", recordingDuration, "ms")
+    console.log("[Voice] User released button. Recording duration:", recordingDuration, "ms")
     
     // If recording was very short (< 300ms), wait longer to allow audio processing
     // Otherwise, stop after a brief delay to finalize results
@@ -506,7 +507,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     
     setTimeout(() => {
       if (recognitionRef.current && isRecording) {
-        console.log("Calling recognition.stop() after", stopDelay, "ms delay")
+        console.log("[Voice] Calling recognition.stop() after", stopDelay, "ms delay")
         recognitionRef.current.stop()
       }
     }, stopDelay)
@@ -515,7 +516,29 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
   const handlePointerDown = () => {
     if (!voiceSupported) return
     if (input.trim().length > 0) return
-    beginVoiceCapture()
+    
+    // CRITICAL: getUserMedia must be called directly from user gesture handler
+    // No async delays - must be triggered synchronously from user tap
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // Call getUserMedia directly - this triggers permission prompt on iOS
+      // The promise is fine, but the call must be synchronous from user gesture
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          // Stop the stream immediately - we only needed it to request permission
+          stream.getTracks().forEach(track => track.stop())
+          console.log("[Voice] Microphone permission granted")
+          // Now start speech recognition
+          beginVoiceCapture()
+        })
+        .catch((mediaError) => {
+          console.warn("[Voice] getUserMedia error:", mediaError)
+          // Try speech recognition anyway - it might still work
+          beginVoiceCapture()
+        })
+    } else {
+      // Fallback: if getUserMedia not available, try speech recognition directly
+      beginVoiceCapture()
+    }
   }
 
   const handlePointerUp = () => {
