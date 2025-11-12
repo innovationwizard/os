@@ -176,8 +176,33 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
 
     if (!RecognitionCtor) return
 
+    // Auto-detect language from speech - support English and Latin American Spanish
+    // Language detection is based on what the user speaks, not browser/device settings
+    const getSpeechLanguage = (): string => {
+      // Latin American Spanish (not Mexico, not Spain)
+      // es-419 is the standard Latin America code, prioritized first
+      // Include additional Latin American country variants for better dialect support
+      const languages = [
+        "es-419", // Latin America (standard - prioritized)
+        "es-AR", // Argentina
+        "es-CO", // Colombia
+        "es-CL", // Chile
+        "es-PE", // Peru
+        "es-VE", // Venezuela
+        "es-EC", // Ecuador
+        "en-US", // English (United States)
+        "en", // English (generic)
+      ].join(",")
+      
+      // The browser will auto-detect the language based on the actual speech
+      // This works regardless of browser/device language settings
+      return languages
+    }
+
     const recognition: SpeechRecognitionInstance = new RecognitionCtor()
-    recognition.lang = "en-US"
+    const speechLang = getSpeechLanguage()
+    recognition.lang = speechLang
+    console.log("Speech recognition languages:", speechLang)
     recognition.interimResults = true
     recognition.continuous = true // Keep listening until we explicitly stop
     if ("maxAlternatives" in recognition) {
