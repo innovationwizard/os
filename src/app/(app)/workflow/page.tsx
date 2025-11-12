@@ -122,8 +122,10 @@ export default function WorkflowPage() {
     const item = items.find((entry) => entry.id === draggableId)
     if (!item) return
 
-    const [sourceStatus, sourceSwimlane] = source.droppableId.split("-")
-    const [destStatus, destSwimlane] = destination.droppableId.split("-")
+    // Parse source droppableId
+    const sourceParts = source.droppableId.split("-")
+    const sourceStatus = sourceParts.slice(0, -1).join("-")
+    const sourceSwimlane = sourceParts[sourceParts.length - 1]
 
     // Same column and swimlane - reorder within column
     if (source.droppableId === destination.droppableId) {
@@ -166,7 +168,20 @@ export default function WorkflowPage() {
     }
 
     // Different column - move between columns
-    const [nextStatus] = destination.droppableId.split("-")
+    // Parse droppableId: format is "STATUS-SWIMLANE" (e.g., "CREATE-EXPEDITE", "DONE-PROJECT")
+    // For statuses with underscores like "IN_REVIEW", we need to handle splitting correctly
+    const destParts = destination.droppableId.split("-")
+    // Status is everything except the last part (swimlane)
+    const nextStatus = destParts.slice(0, -1).join("-")
+    const destSwimlane = destParts[destParts.length - 1]
+
+    console.log("[Workflow] Moving item:", {
+      from: source.droppableId,
+      to: destination.droppableId,
+      nextStatus,
+      destSwimlane,
+      itemId: draggableId
+    })
 
     if (nextStatus === "CREATE") {
       const inCreate = items.filter((entry) => entry.status === "CREATE")
@@ -203,10 +218,18 @@ export default function WorkflowPage() {
       })
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        console.error("[Workflow] Failed to update item:", response.status, errorData)
+        setDragError(`Failed to move item: ${errorData.error || "Unknown error"}`)
+        setTimeout(() => setDragError(""), 3000)
         await refreshItems()
+      } else {
+        console.log("[Workflow] Successfully moved item to", nextStatus)
       }
     } catch (error) {
-      console.error("Failed to update item", error)
+      console.error("[Workflow] Failed to update item", error)
+      setDragError("Failed to move item. Please try again.")
+      setTimeout(() => setDragError(""), 3000)
       await refreshItems()
     }
   }
