@@ -77,6 +77,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const queueLoadedRef = useRef(false)
   const queueRef = useRef<QueueItem[]>([])
@@ -120,6 +121,8 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     if (!queueRef.current.length) return
 
     syncingRef.current = true
+    setIsSyncing(true)
+    
     // Create a snapshot of the queue at the start of sync
     // This ensures we process all items that were in the queue when sync started
     const pending = [...queueRef.current]
@@ -157,6 +160,9 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
       // Use functional update to ensure we're working with the latest state
       // New items added during sync will be preserved
       if (syncedIds.size > 0) {
+        // Add a small delay to ensure the user sees the syncing state
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        
         setQueue((prev) => {
           // Filter out only the items that were successfully synced
           // This preserves any new items that were added during sync
@@ -172,6 +178,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
       // Individual items are handled in the loop, so this shouldn't happen
     } finally {
       syncingRef.current = false
+      setIsSyncing(false)
     }
   }, [])
 
@@ -426,11 +433,12 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
       // Only trigger sync if online and not already syncing
       // If a sync is in progress, the new item will be included in the next sync
       if (typeof navigator === "undefined" || navigator.onLine) {
-        // Use a small delay to ensure state is committed before syncing
+        // Use a delay to ensure users can see the "waiting to sync" message
         // This also allows multiple rapid captures to batch together
+        // Increased delay so users can see the status message before it changes to "Syncing..."
         setTimeout(() => {
           void syncQueue()
-        }, 50)
+        }, 800)
       }
     },
     [syncQueue]
@@ -578,11 +586,16 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
             <span className="h-2 w-2 rounded-full bg-current" />
             {isOnline ? "Online" : "Offline — will sync later"}
           </span>
-          {queue.length > 0 && (
+          {isSyncing ? (
+            <span className="inline-flex items-center gap-2 text-blue-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-current" />
+              Syncing...
+            </span>
+          ) : queue.length > 0 ? (
             <span>
               {queue.length} idea{queue.length === 1 ? "" : "s"} waiting to sync
             </span>
-          )}
+          ) : null}
         </div>
       </section>
 

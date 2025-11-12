@@ -60,24 +60,52 @@ export function AccountabilityView() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
-        Loading your items...
+      <div className="space-y-4">
+        <header className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Step 2: Follow up on your commands
+          </p>
+          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+            Status:
+          </h1>
+        </header>
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
+          Loading your items...
+        </div>
       </div>
     )
   }
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
-        <p className="text-sm text-slate-500">No items captured yet.</p>
+      <div className="space-y-4">
+        <header className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Step 2: Follow up on your commands
+          </p>
+          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+            Status:
+          </h1>
+        </header>
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
+          <p className="text-sm text-slate-500">No items captured yet.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-slate-900">Your Submissions</h2>
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <header className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Step 2: Follow up on your commands
+        </p>
+        <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+          Status:
+        </h1>
+      </header>
+
+      <div className="space-y-3">
         {items.map((item) => {
           const daysSinceCreation = getDaysSince(item.createdAt)
           const daysSinceStatusChange = getDaysSinceStatusChange(item.statusChangedAt)
