@@ -10,7 +10,8 @@ import {
   Home,
   LogOut,
   User,
-  Brain
+  Brain,
+  Settings
 } from "lucide-react"
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/clean", label: "Clean", icon: Filter },
   { href: "/workflow", label: "Workflow", icon: LayoutIcon },
   { href: "/library", label: "Library", icon: Library },
+  { href: "/account", label: "Account", icon: Settings },
   { href: "/", label: "Overview", icon: Home }
 ]
 

@@ -31,7 +31,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            SSOT Login
+            Login
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -65,8 +65,16 @@ export default function LoginPage() {
             Sign In
           </button>
         </form>
-        <p className="text-center text-sm text-gray-600">
-          Default: jorge@aidev.international / change-this-password
+        <p className="space-y-1 text-center text-sm text-gray-600">
+          <span className="block">
+            Creator: jorge@aidev.international / change-this-password
+          </span>
+          <span className="block">
+            Wife: stefani121@gmail.com / change-this-password
+          </span>
+          <span className="block text-xs text-gray-500">
+            Update your password inside the app at Account → Change password.
+          </span>
         </p>
       </div>
     </div>
