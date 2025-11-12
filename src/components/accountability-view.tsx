@@ -14,6 +14,7 @@ interface AccountabilityItem {
 export function AccountabilityView() {
   const [items, setItems] = useState<AccountabilityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     void fetchItems()
@@ -21,13 +22,38 @@ export function AccountabilityView() {
 
   async function fetchItems() {
     setLoading(true)
+    setError(null)
     try {
-      const response = await fetch("/api/items?capturedBy=me")
-      if (!response.ok) throw new Error("Failed to load items")
+      console.log("[Accountability] Fetching items with capturedBy=me")
+      const response = await fetch("/api/items?capturedBy=me", {
+        cache: "no-store",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        console.error("[Accountability] Failed to load items:", response.status, errorData)
+        setError(`Failed to load items: ${response.status} ${errorData.error || ""}`)
+        return
+      }
+      
       const data: AccountabilityItem[] = await response.json()
-      setItems(data)
+      console.log(`[Accountability] Loaded ${data.length} items:`, data)
+      
+      // Ensure all items have statusChangedAt (fallback to createdAt if missing)
+      const validItems = data.map(item => ({
+        ...item,
+        statusChangedAt: item.statusChangedAt || item.createdAt
+      }))
+      
+      console.log(`[Accountability] Setting ${validItems.length} items`)
+      setItems(validItems)
     } catch (error) {
-      console.error("Failed to fetch items", error)
+      console.error("[Accountability] Error fetching items:", error)
+      setError(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setLoading(false)
     }
@@ -80,7 +106,7 @@ export function AccountabilityView() {
     )
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !loading) {
     return (
       <div className="space-y-4">
         <header className="space-y-2">
@@ -92,7 +118,20 @@ export function AccountabilityView() {
           </h1>
         </header>
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
-          <p className="text-sm text-slate-500">No items captured yet.</p>
+          {error ? (
+            <div className="space-y-2">
+              <p className="text-sm text-red-600 font-medium">{error}</p>
+              <button
+                type="button"
+                onClick={() => void fetchItems()}
+                className="mt-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No items captured yet.</p>
+          )}
         </div>
       </div>
     )

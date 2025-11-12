@@ -96,7 +96,9 @@ export async function GET(request: NextRequest) {
 
   // Enhanced logging to debug missing items
   console.log(`[GET /api/items] Query:`, JSON.stringify(whereClause, null, 2))
-  console.log(`[GET /api/items] Found ${items.length} items for user ${session.user.id} (${session.user.email}), status: ${status || "all"}, capturedBy: ${capturedBy || "all"}`)
+  console.log(`[GET /api/items] User: ${session.user.id} (${session.user.email}), role: ${session.user.role}`)
+  console.log(`[GET /api/items] Found ${items.length} items, status: ${status || "all"}, capturedBy: ${capturedBy || "all"}`)
+  
   if (items.length > 0) {
     console.log(`[GET /api/items] All item details:`, items.map(item => ({
       id: item.id,
@@ -105,16 +107,53 @@ export async function GET(request: NextRequest) {
       createdByUserId: item.createdByUserId,
       capturedByUserId: item.capturedByUserId,
       capturedBy: item.capturedBy?.email,
-      createdAt: item.createdAt
+      createdAt: item.createdAt,
+      statusChangedAt: item.statusChangedAt
     })))
   } else {
-    console.log(`[GET /api/items] No items found. Checking total items for user...`)
-    const allItems = await prisma.item.findMany({
-      where: { createdByUserId: session.user.id },
-      select: { id: true, title: true, status: true, createdAt: true }
-    })
-    console.log(`[GET /api/items] Total items for user: ${allItems.length}`, allItems.map(item => ({ id: item.id, title: item.title, status: item.status })))
+    // Debug: Check if there are any items with capturedByUserId
+    if (capturedBy === "me") {
+      const allCapturedItems = await prisma.item.findMany({
+        where: { capturedByUserId: session.user.id },
+        select: { 
+          id: true, 
+          title: true, 
+          status: true, 
+          createdAt: true,
+          capturedByUserId: true,
+          createdByUserId: true
+        }
+      })
+      console.log(`[GET /api/items] Total items captured by user: ${allCapturedItems.length}`, allCapturedItems)
+      
+      // Also check items created by this user
+      const createdItems = await prisma.item.findMany({
+        where: { createdByUserId: session.user.id },
+        select: { 
+          id: true, 
+          title: true, 
+          status: true, 
+          createdAt: true,
+          capturedByUserId: true,
+          createdByUserId: true
+        }
+      })
+      console.log(`[GET /api/items] Total items created by user: ${createdItems.length}`, createdItems)
+    } else {
+      console.log(`[GET /api/items] No items found for query.`)
+      const allItems = await prisma.item.findMany({
+        where: { createdByUserId: session.user.id },
+        select: { id: true, title: true, status: true, createdAt: true }
+      })
+      console.log(`[GET /api/items] Total items for user: ${allItems.length}`, allItems.map(item => ({ id: item.id, title: item.title, status: item.status })))
+    }
   }
 
-  return NextResponse.json(items)
+  // Ensure all items have statusChangedAt (fallback to createdAt if missing)
+  const itemsWithStatus = items.map(item => ({
+    ...item,
+    statusChangedAt: item.statusChangedAt || item.createdAt
+  }))
+
+  return NextResponse.json(itemsWithStatus)
 }
