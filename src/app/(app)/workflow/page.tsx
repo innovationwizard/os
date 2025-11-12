@@ -29,13 +29,16 @@ interface ColumnConfig {
 }
 
 const COLUMNS: Record<string, ColumnConfig> = {
-  TODO: { title: "To Do", color: "bg-slate-100" },
   ON_HOLD: { title: "On Hold", color: "bg-slate-200" },
-  CREATE: { title: "Create (WIP 1)", color: "bg-blue-100", wipLimit: 1 },
-  IN_REVIEW: { title: "In Review", color: "bg-amber-100" },
   BLOCKED: { title: "Blocked", color: "bg-rose-100" },
+  TODO: { title: "To Do", color: "bg-slate-100" },
+  CREATE: { title: "Doing", color: "bg-blue-100", wipLimit: 1 },
+  IN_REVIEW: { title: "Testing", color: "bg-amber-100" },
   DONE: { title: "Done", color: "bg-emerald-100" }
 }
+
+// Column order from left to right
+const COLUMN_ORDER = ["ON_HOLD", "BLOCKED", "TODO", "CREATE", "IN_REVIEW", "DONE"]
 
 const SWIMLANES = ["EXPEDITE", "PROJECT", "HABIT", "HOME"]
 
@@ -165,8 +168,11 @@ export default function WorkflowPage() {
       <div className="flex-1 overflow-auto px-6 py-6">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid min-w-[1320px] grid-cols-6 gap-4">
-            {Object.entries(COLUMNS).map(([status, config]) => (
-              <section key={status} className="flex flex-col">
+            {COLUMN_ORDER.map((status) => {
+              const config = COLUMNS[status]
+              if (!config) return null
+              return (
+                <section key={status} className="flex flex-col">
                 <div
                   className={`rounded-t-md px-3 py-2 text-sm font-medium text-slate-700 ${config.color}`}
                 >
@@ -261,7 +267,7 @@ export default function WorkflowPage() {
                   ))}
                 </div>
               </section>
-            ))}
+            )})}
           </div>
         </DragDropContext>
       </div>
