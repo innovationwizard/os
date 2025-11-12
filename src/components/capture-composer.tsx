@@ -84,6 +84,8 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
   const skipClickRef = useRef(false)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const liveTranscriptRef = useRef("")
+  const recordingStartTimeRef = useRef<number>(0)
+  const hasReceivedAudioRef = useRef<boolean>(false)
 
   const persistQueue = useCallback((next: QueueItem[]) => {
     if (typeof window === "undefined") return
@@ -177,6 +179,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     const recognition: SpeechRecognitionInstance = new RecognitionCtor()
     recognition.lang = "en-US"
     recognition.interimResults = true
+    recognition.continuous = true // Keep listening until we explicitly stop
     if ("maxAlternatives" in recognition) {
       recognition.maxAlternatives = 1
     }
@@ -184,50 +187,38 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     recognition.onresult = (event: any) => {
       // Use any type for browser compatibility - different browsers implement the API slightly differently
       const results = event.results
-      let newTranscript = ""
-      
-      // Process only new results (from resultIndex to end) to accumulate transcript
-      const startIndex = event.resultIndex ?? 0
-      for (let i = startIndex; i < results.length; i += 1) {
-        try {
-          // Access result - try array index first, then item method
-          const result = results[i] ?? (typeof results.item === "function" ? results.item(i) : null)
-          if (!result) continue
-          
-          // Access first alternative - try array index first, then item method
-          const alternative = result[0] ?? (typeof result.item === "function" ? result.item(0) : null)
-          if (alternative?.transcript) {
-            newTranscript += alternative.transcript + " "
-          }
-        } catch (error) {
-          console.warn("Error processing result at index", i, error)
-        }
-      }
       
       // Accumulate transcript (the API gives us all results each time, so we rebuild from scratch)
       if (results.length > 0) {
         let completeTranscript = ""
         let hasFinalResult = false
+        
         for (let i = 0; i < results.length; i += 1) {
           try {
+            // Access result - try array index first, then item method
             const result = results[i] ?? (typeof results.item === "function" ? results.item(i) : null)
             if (!result) continue
+            
+            // Access first alternative - try array index first, then item method
             const alternative = result[0] ?? (typeof result.item === "function" ? result.item(0) : null)
             if (alternative?.transcript) {
               completeTranscript += alternative.transcript + " "
+              // Mark that we've received audio
+              hasReceivedAudioRef.current = true
             }
             // Check if this is a final result
             if (result.isFinal) {
               hasFinalResult = true
             }
           } catch (error) {
-            // Skip this result
+            console.warn("Error processing result at index", i, error)
           }
         }
+        
         const trimmedTranscript = completeTranscript.trim()
         if (trimmedTranscript) {
           liveTranscriptRef.current = trimmedTranscript
-          console.log("Voice transcript:", trimmedTranscript, "| Results:", results.length, "| Has final:", hasFinalResult)
+          console.log("Voice transcript:", trimmedTranscript, "| Results:", results.length, "| Has final:", hasFinalResult, "| Has audio:", hasReceivedAudioRef.current)
         }
       }
     }
@@ -243,10 +234,13 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     recognition.onend = () => {
       setIsRecording(false)
       
-      // Small delay to ensure final results are processed
+      // Increased delay to ensure final results are processed
       setTimeout(() => {
         const transcript = liveTranscriptRef.current.trim()
-        console.log("Voice recognition ended. Final transcript:", transcript)
+        const recordingDuration = Date.now() - recordingStartTimeRef.current
+        const receivedAudio = hasReceivedAudioRef.current
+        
+        console.log("Voice recognition ended. Final transcript:", transcript, "| Duration:", recordingDuration, "ms | Has audio:", receivedAudio)
         
         if (transcript) {
           // Add transcript to input field
@@ -262,21 +256,50 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
             setVoiceStatus(null)
           }, 1500)
         } else {
-          console.warn("No transcript captured in onend")
-          setVoiceStatus("No speech detected")
-          setTimeout(() => setVoiceStatus(null), 2000)
+          // Only show "No speech detected" if:
+          // 1. We recorded for at least 500ms (user actually tried to speak)
+          // 2. OR we received some audio but no transcript (unlikely but possible)
+          if (recordingDuration >= 500 || receivedAudio) {
+            console.warn("No transcript captured in onend, but recording was substantial")
+            setVoiceStatus("No speech detected")
+            setTimeout(() => setVoiceStatus(null), 2000)
+          } else {
+            // Very short click - probably accidental, don't show error
+            console.log("Short click detected, ignoring")
+          }
         }
         
         skipClickRef.current = true
-      }, 100) // Small delay to allow final onresult to process
+      }, 300) // Increased delay to allow final onresult to process
     }
     
     recognition.onnomatch = () => {
-      console.warn("No speech match found")
-      setVoiceStatus("No speech detected")
+      const recordingDuration = Date.now() - recordingStartTimeRef.current
+      const receivedAudio = hasReceivedAudioRef.current
+      
+      console.warn("No speech match found. Duration:", recordingDuration, "ms | Has audio:", receivedAudio)
+      
+      // Only show error if we've been recording for a while or received audio
+      // This prevents false positives from quick clicks
+      if (recordingDuration >= 500 || receivedAudio) {
+        setVoiceStatus("No speech detected")
+        setTimeout(() => setVoiceStatus(null), 2000)
+      }
+      
       setIsRecording(false)
       skipClickRef.current = true
       liveTranscriptRef.current = ""
+    }
+    
+    // Track when audio starts being captured
+    recognition.onsoundstart = () => {
+      console.log("Sound detected - audio capture started")
+      hasReceivedAudioRef.current = true // Any sound means we're capturing audio
+    }
+    
+    recognition.onspeechstart = () => {
+      console.log("Speech detected - processing audio")
+      hasReceivedAudioRef.current = true
     }
 
     recognitionRef.current = recognition
@@ -348,20 +371,38 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
 
     try {
       liveTranscriptRef.current = ""
+      hasReceivedAudioRef.current = false
+      recordingStartTimeRef.current = Date.now()
+      
       recognitionRef.current?.start()
       setIsRecording(true)
       setVoiceStatus("Listening… release to capture")
       skipClickRef.current = true
+      console.log("Voice recognition started")
     } catch (error) {
       console.warn("Unable to start voice capture", error)
       setVoiceStatus("Voice capture unavailable.")
+      setIsRecording(false)
       skipClickRef.current = false
     }
   }
 
   const endVoiceCapture = () => {
     if (!isRecording) return
-    recognitionRef.current?.stop()
+    
+    const recordingDuration = Date.now() - recordingStartTimeRef.current
+    console.log("User released button. Recording duration:", recordingDuration, "ms")
+    
+    // If recording was very short (< 300ms), wait longer to allow audio processing
+    // Otherwise, stop after a brief delay to finalize results
+    const stopDelay = recordingDuration < 300 ? 800 : 500
+    
+    setTimeout(() => {
+      if (recognitionRef.current && isRecording) {
+        console.log("Calling recognition.stop() after", stopDelay, "ms delay")
+        recognitionRef.current.stop()
+      }
+    }, stopDelay)
   }
 
   const handlePointerDown = () => {
