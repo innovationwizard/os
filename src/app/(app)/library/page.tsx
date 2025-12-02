@@ -125,7 +125,7 @@ export default function LibraryPage() {
   async function loadLibrary() {
     setLoading(true)
     try {
-      const response = await fetch("/api/items?status=LIBRARY")
+      const response = await fetch("/api/items?status=COMPENDIUM")
       const data: Item[] = await response.json()
       setItems(data)
       setSelected((current) =>
@@ -172,14 +172,14 @@ export default function LibraryPage() {
     setSaving(true)
     try {
       if (creating) {
-        // Create new library item
+        // Create new compendium item
         const response = await fetch("/api/items", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: editTitle.trim(),
             content: editContent.trim(),
-            status: "LIBRARY",
+            status: "COMPENDIUM",
             type: "INFO"
           })
         })
@@ -262,7 +262,7 @@ export default function LibraryPage() {
             <div>
               <h1 className="flex items-center gap-2 text-2xl font-semibold text-slate-900">
                 <BookOpen className="h-5 w-5 text-slate-500" />
-                Knowledge Library
+                Knowledge Compendium
               </h1>
               <p className="mt-2 text-sm text-slate-500">
                 Reference material and context captured during work.
@@ -296,7 +296,7 @@ export default function LibraryPage() {
                   // Delay hiding suggestions to allow clicks
                   setTimeout(() => setShowSuggestions(false), 200)
                 }}
-                placeholder="Search library items..."
+                placeholder="Search compendium items..."
                 className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
               />
             </div>
@@ -372,7 +372,7 @@ export default function LibraryPage() {
 
         {loading ? (
           <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
-            Loading library…
+            Loading compendium…
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[320px,1fr]">

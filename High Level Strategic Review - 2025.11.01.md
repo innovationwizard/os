@@ -4,6 +4,22 @@ Sat 1 Nov 2025
 
 This analysis incorporates your projects, strategic habits, and professional evaluations.
 
+## Project Concepts
+
+### Gigr
+
+**Main Concept:**
+
+The mission of this project is to get me gigs. 
+
+AI gigs or AI related gigs are strongly preferred. 
+
+As a full stack dev, web app developments that don't require AI and other programming developments that don't require AI are also allowed. 
+
+Underlying the mission is the laser-focused purpose of turning my expertise and my skills into a money-making-machine, as much as possible, and as fast as possible.
+
+---
+
 ### **1\. Core Strategic Conflict: The Two "Jobs"**
 
 Your time is now split between two distinct, competing objectives. Your "Resource Saturation" has evolved into a direct conflict.

@@ -1,0 +1,27 @@
+# Core ML Libraries (PyTorch for M1)
+torch>=2.0.0
+transformers>=4.35.0
+
+# Reinforcement Learning Training
+trl>=0.7.0
+
+# Parameter-Efficient Fine-Tuning
+peft>=0.6.0
+
+# Training Acceleration
+accelerate>=0.24.0
+
+# Quantization Support (4-bit for M1)
+bitsandbytes>=0.41.0
+
+# Dataset Handling
+datasets>=2.14.0
+
+# Experiment Tracking
+wandb>=0.15.0
+
+# Database Access
+psycopg2-binary>=2.9.0
+
+# Environment Variables
+python-dotenv>=1.0.0

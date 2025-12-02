@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/training/calculate-pending",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/training/outcomes",
+      "schedule": "15 * * * *"
+    }
+  ]
+}

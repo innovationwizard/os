@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { ReactNode } from "react"
 
 export const metadata: Metadata = {
-  title: "Command Center - OS",
+  title: "Command Center - OCD",
   description: "Capture commands and follow up on submissions",
   icons: {
     icon: "/message-circle-heart.svg",

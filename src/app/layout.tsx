@@ -1,8 +1,8 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
-const title = "OS – Organization Strategy"
+const title = "OCD – Opus Corpus Documenter"
 const description = "AI-powered capture, routing, and kanban intelligence."
 const imageUrl = "/og-brain.svg"
 const iconUrl = "/brain.svg"
@@ -10,21 +10,27 @@ const iconUrl = "/brain.svg"
 export const metadata: Metadata = {
   title,
   description,
+  manifest: "/manifest.json",
   icons: {
     icon: iconUrl,
     shortcut: iconUrl,
     apple: iconUrl
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "OCD"
+  },
   openGraph: {
     title,
     description,
-    siteName: "OS",
+    siteName: "OCD",
     images: [
       {
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: "OS – Organization Strategy"
+        alt: "OCD – Opus Corpus Documenter"
       }
     ],
     type: "website"
@@ -35,6 +41,14 @@ export const metadata: Metadata = {
     description,
     images: [imageUrl]
   }
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover"
 }
 
 export default function RootLayout({

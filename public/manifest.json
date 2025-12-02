@@ -1,0 +1,38 @@
+{
+  "name": "OCD – Opus Corpus Documenter",
+  "short_name": "OCD",
+  "description": "AI-powered capture, routing, and kanban intelligence.",
+  "start_url": "/pwa/capture",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brain.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/message-circle-heart.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Capture",
+      "short_name": "Capture",
+      "description": "Quick capture your ideas",
+      "url": "/pwa/capture",
+      "icons": [{ "src": "/brain.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}
+
+
+

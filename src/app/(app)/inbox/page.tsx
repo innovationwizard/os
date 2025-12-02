@@ -113,7 +113,7 @@ export default function InboxPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "LIBRARY",
+          status: "COMPENDIUM",
           type: "INFO"
         })
       })
@@ -222,7 +222,7 @@ export default function InboxPage() {
                 >
                   No – store as reference
                   <span className="mt-1 block text-xs font-normal text-slate-500">
-                    Send to Library as information
+                    Send to Compendium as information
                   </span>
                 </button>
                 <button
@@ -307,7 +307,7 @@ export default function InboxPage() {
             </p>
             {items.length === 0 && (
               <p className="text-xs text-amber-600 font-medium">
-                ⚠️ No items in INBOX. Check Workflow page or Library to see where items went.
+                ⚠️ No items in INBOX. Check Workflow page or Compendium to see where items went.
               </p>
             )}
             <pre className="overflow-auto text-xs text-slate-500 max-h-40">

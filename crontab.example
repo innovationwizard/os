@@ -1,0 +1,18 @@
+# Example crontab entries for reward calculation
+# Install: crontab -e
+# Then paste one of the options below
+
+# Option 1: Run daily at 2 AM using shell script
+# 0 2 * * * cd /path/to/ocd && /bin/bash scripts/calculate-rewards-daily.sh >> logs/reward-calculation.log 2>&1
+
+# Option 2: Run daily at 2 AM using Node.js script
+# 0 2 * * * cd /path/to/ocd && node scripts/calculate-rewards-daily.js >> logs/reward-calculation.log 2>&1
+
+# Option 3: Run daily at 2 AM using curl (simplest)
+# 0 2 * * * curl -X POST http://localhost:3000/api/training/calculate-pending >> /path/to/ocd/logs/reward-calculation.log 2>&1
+
+# Option 4: Run daily at 2 AM with environment variables
+# 0 2 * * * cd /path/to/ocd && /usr/bin/env bash -c 'source .env && curl -X POST $API_URL/api/training/calculate-pending' >> logs/reward-calculation.log 2>&1
+
+# Note: Replace /path/to/ocd with your actual project path
+# Note: Make sure your Next.js app is running or use a production URL

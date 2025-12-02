@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { OpusCrudModal } from "@/components/opus-crud-modal"
 
 interface InboxItem {
   id: string
@@ -29,6 +30,7 @@ export default function CleanPage() {
   const [newProjectTitle, setNewProjectTitle] = useState("")
   const [instructions, setInstructions] = useState("")
   const [confirmation, setConfirmation] = useState<string | null>(null)
+  const [showOpusModal, setShowOpusModal] = useState(false)
 
   useEffect(() => {
     void fetchItems()
@@ -87,6 +89,22 @@ export default function CleanPage() {
     }
   }
 
+  async function handleOpusSelect(opus: { id: string; name: string; opusType: string }) {
+    // If it's a PROJECT type, add it to projects list and assign
+    if (opus.opusType === "PROJECT") {
+      // Refresh projects list to get latest
+      await fetchProjects()
+      await handleAssign(opus.id)
+    }
+    setShowOpusModal(false)
+  }
+
+  async function handleOpusModalClose() {
+    setShowOpusModal(false)
+    // Refresh projects when modal closes in case new PROJECT opuses were created
+    await fetchProjects()
+  }
+
   const currentItem = useMemo(() => {
     if (!currentItemId) return items[0] ?? null
     return items.find(item => item.id === currentItemId) ?? items[0] ?? null
@@ -102,7 +120,7 @@ export default function CleanPage() {
     setConfirmation(null)
   }
 
-  async function handleAssign(projectId: string, options?: { skipGuard?: boolean }) {
+  async function handleAssign(opusId: string, options?: { skipGuard?: boolean }) {
     if (!currentItem || (assigning && !options?.skipGuard)) return
 
     setAssigning(true)
@@ -112,7 +130,7 @@ export default function CleanPage() {
       const response = await fetch(`/api/items/${currentItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, routingNotes: instructions })
+        body: JSON.stringify({ opusId, routingNotes: instructions })
       })
 
       if (!response.ok) {
@@ -120,7 +138,7 @@ export default function CleanPage() {
       }
 
       const projectTitle =
-        projects.find((project) => project.id === projectId)?.title ?? "project"
+        projects.find((project) => project.id === opusId)?.title ?? "project"
 
       setConfirmation(`Routed to ${projectTitle}. AI Filer is processing...`)
       setInstructions("")
@@ -264,6 +282,16 @@ export default function CleanPage() {
               </div>
             )}
 
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setShowOpusModal(true)}
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 underline"
+              >
+                Manage all opuses
+              </button>
+            </div>
+
             <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -381,6 +409,13 @@ export default function CleanPage() {
           </div>
         )}
       </div>
+
+      <OpusCrudModal
+        isOpen={showOpusModal}
+        onClose={handleOpusModalClose}
+        onSelect={handleOpusSelect}
+        filterType="PROJECT"
+      />
     </div>
   )
 }

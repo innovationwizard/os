@@ -1,0 +1,7 @@
+# Training data files
+*.jsonl
+*.csv
+*.parquet
+
+# Keep directory structure
+!.gitignore

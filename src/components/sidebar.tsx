@@ -11,7 +11,8 @@ import {
   LogOut,
   User,
   Brain,
-  Settings
+  Settings,
+  Sparkles
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -19,7 +20,8 @@ const navItems = [
   { href: "/capture", label: "Capture", icon: PenSquare },
   { href: "/clean", label: "Clean", icon: Filter },
   { href: "/workflow", label: "Workflow", icon: LayoutIcon },
-  { href: "/library", label: "Library", icon: Library },
+  { href: "/library", label: "Compendium", icon: Library },
+  { href: "/generate", label: "Generate", icon: Sparkles },
   { href: "/", label: "Overview", icon: Home }
 ]
 
@@ -48,10 +50,10 @@ export function Sidebar({ user }: SidebarProps) {
         </span>
         <div>
           <div className="text-sm font-semibold tracking-wide text-slate-500">
-            OS
+            OCD
           </div>
           <div className="text-lg font-semibold text-slate-900">
-            Organization Strategy
+            Opus Corpus Documenter
           </div>
         </div>
       </div>

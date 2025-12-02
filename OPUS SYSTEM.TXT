@@ -1,0 +1,101 @@
+OPUS CORPUS LIVE DOCUMENTS MANAGEMENT SYSTEM
+
+This is a hybrid system that blends world-class methodologies, adapted to optimize and automate an AI developer-creator's workflow.
+
+	``` 
+	GTD (Getting Things Done): Used for its rigorous, logistical Clean (Clarify) step ("Is this actionable?") and its On Hold (Someday/Maybe) concept.
+
+	David Allen added "Clarify" as a separate, mandatory step because his system is built for task management. You cannot organize an item until you have first decided what it is.
+
+	"Clarify" is the non-negotiable triage step where you ask the most important question in GTD: "Is this actionable?"
+
+	This one decision dictates the item's entire lifecycle:
+
+	If 'Yes' (It's a Task): The "Clarify" step forces you to define the "Next Action" and determine if it's a multi-step "Project." You also check the 2-minute rule, delegate it, or schedule it.
+
+	If 'No' (It's Knowledge/Reference): The "Clarify" step determines if it's Trash, Reference, or Someday/Maybe.
+	```
+
+All captured Items are Cleaned (Clarified) into one of three states:
+
+	A. Create (Kanban): Actionable tasks. (From "Do the dishes" to "Client requested an enterprise project with these specs...".)
+
+	B. On Hold (Someday/Maybe): Actionable. BUT NOT NOW! (Typically my moonshots. I'd love to write an AI OS! And the Voynich Manuscript Decoder! But I must not do it now because I have a family to feed and bills to pay.)
+
+	C. Compendium (Searchable): I jokingly call this "Random Access Memory" because it will contain many, many pieces of information that 99.99% of the time nobody needs. But when they are needed, they are CRITICAL! One recent event is the cemetery maintenance payments for my father's side of the family. Everybody forgets about this for years. Then, out of the blue, someone remembers, and intends to pay. And the known struggle starts: nobody know the account number. They will search through papers for hours, days or weeks until someone finds an or receipt with the account number, enabling the action of paying. More predictable things that I don't know by heart: my wife's ID number, tax number, etc. When I say "Searchable" I mean Google-fast searches, with Google-like suggestions under the search bar as you type. SMART suggestions. AI SMART suggestions. 
+
+	D. Trash: Some ideas are incomplete, or clearly not feasible. "Delete" is always available at all stages of the workflow. "Delete" should be not immediately visible, behind one or more clicks, because I control the input, most of the time I will not feed something that ends up being deleted. 
+
+
+*Kanban*: The visual UI/UX for managing the Create step (To Do's), visualizing flow, state, swimlanes, and enforcing the WIP=1 rule.
+
+*Deep Work* (Read: Cal Newport): The core philosophy for the Create step. The system must be architected to protect the state of cognitive focus.
+
+*SCRUM* is a project management framework for teams to deliver value in increments. It is built on the idea of Sprints, which are fixed-length time-boxes, which conflicts with most of my system. The one element we adopt from SCRUM are "Restrospectives". The Retrospective is a reflection about the workflow itself. To review process, not projects. The goal is to generate Items for improving the system itself. This is the "meta-step" that allows for continuous improvement and evolution.
+
+
+(Personal note: I could be doing monetizable work right now, but instead I'm doing backoffice work. Not good. This is not the best use of my state of cognitive focus. The system should do the backoffice for me. As much as possible. All of it if possible.)
+
+This is an idea: 
+	```
+	PR-Based Workflow: The "Done" trigger can optionally, not by default set to: Tasks are only completed via a git push that merges a Pull Request, not a simple commit. Default is manually moved to Done in the Kanban board. 
+	```
+Not necessary. Not for MVP. But the architecture should support its implementation in the future. 
+
+USER 1: The Creator
+	Client: Full-featured Desktop Web Application, and Mobile App with minimal functionalities, input via text or voice. 
+	Permissions: Full CRUD (Create, Read, Update, Delete).
+
+USER 2: The Stakeholder (Wife)
+	Client: Lightweight Mobile App (PWA).
+	Permissions:
+	Create: Can create new Items which land only in the Creator's Inbox.
+	Read: Can read the status of any Item she created.
+	Goal: Assign tasks and get passive, real-time status updates. Input via text or voice. 
+
+
+----------
+
+
+THIS IS THE PRIMARY WORKFLOW:
+
+STEP 1: CAPTURE:
+	Job: Get ideas out of your head.
+	Method: Mobile-first, messy text input, or voice. 
+	System Action: A new Item is created in the Inbox. 
+	Stakeholder tasks also land here, in the same Inbox.
+
+STEP 2: CLEAN:
+	Job: Process the Inbox to zero. This is a logistical gate.
+	Method: For each Item in the Inbox: 
+		2.1 Clean (Clarify)
+		2.2 IF CREATE: Open modal to assign the Item to an ongoing project or to create a new project with this Iteem. 
+		2.3 Comment (Optional): Write additional information. 
+		2.4 Send to next step.
+
+STEP 3: TRIAGE (Manual Prioritization):
+	Job: Strategically select the one task for the next Deep Work session.
+	Method: Expertise Decision. The Creator reviews the Kanban board (all swimlanes and priorities).
+	System Action: User pulls one Item from a To Do column into the CREATING column. This is the explicit start signal.
+
+STEP 4: CREATE (Deep Work):
+	Job: The Creator executes the chosen task with zero distraction.
+	Method: The user works on the one task. The system enforces the WIP=1 rule. 
+	System Action: The system guardrail prevents any other Item from being moved to the CREATING column. The system knows the Kanban method rules and educates the user when he tries to break any of the rules. These are educational messages only; user may dismiss them and continue breaking the rules. 
+
+STEP 5: PUBLISH:
+	Job: The task is complete and VERIFIED BY AI in the background.
+	Optional Method (Automated): For code tasks, triggered by GitHub Webhooks: PR Opened: Webhook moves Item from CREATING to In Review. This frees the CREATING (WIP=1) slot. PR Merged: Webhook moves Item from In Review to Done.
+	Default Method (Manual): The user manually drags the Item from CREATING to Done.
+	System Action: When status is set to Done, this update is integrated with the wisest and most strategically smart AI model available to the corresponding Opus Corpus Document, in the best possible manner.
+
+STEP 6: RETROSPECTIVE: 
+	Job (The "Why"): To analyze the system's performance and identify actionable improvements to the workflow, rules, or AI implementations. 
+	Method (The "How"): A periodic (e.g., weekly) review of the system's throughput and friction points. You are not doing tasks; you are asking:
+		- Kanban Review: Look at your Done column. What was your throughput?
+		- Friction Review: Look at your Blocked items. What was the real reason they were blocked?
+		- Interruption Review: Look at the Expedite swimlane. How many interruptions sidetracked you? Can this be reduced?
+		- Triage Review: Look at your On Hold list. Should any of these be promoted to the Workflow or moved to Cold Storage?
+	System Action (The "What"): The output of this step is a set of new Items for improving the system itself. You Capture these new "meta-tasks" (e.g., "Tune AI Filer prompt to better handle 'Habit' tasks" or "Add a new Rule to the AI Guardrail") which then enter your Inbox to be processed in the next Clean cycle, just like any other task.
+
+

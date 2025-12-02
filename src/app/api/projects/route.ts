@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import type { Session } from "next-auth"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { ItemStatus, ItemType, Priority, Swimlane } from "@prisma/client"
 
 type SessionWithRole = Session & {
   user: {
@@ -35,22 +34,29 @@ export async function GET() {
   }
 
   try {
-    const projects = await prisma.item.findMany({
+    const projects = await prisma.opus.findMany({
       where: {
         createdByUserId: session.user.id,
-        type: ItemType.PROJECT
+        opusType: "PROJECT"
       },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
-        title: true,
-        status: true,
+        name: true,
         createdAt: true
       }
     })
 
-    console.log(`[Projects API] Found ${projects.length} projects for user ${session.user.id}`)
-    return NextResponse.json(projects)
+    // Transform to match expected format (name -> title, add status field)
+    const transformedProjects = projects.map(opus => ({
+      id: opus.id,
+      title: opus.name,
+      status: "ACTIVE", // Opus doesn't have status, defaulting to ACTIVE
+      createdAt: opus.createdAt
+    }))
+
+    console.log(`[Projects API] Found ${transformedProjects.length} projects for user ${session.user.id}`)
+    return NextResponse.json(transformedProjects)
   } catch (error) {
     console.error("[Projects API] Error fetching projects:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -80,31 +86,26 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const project = await prisma.item.create({
+  const project = await prisma.opus.create({
     data: {
-      title: trimmed,
-      rawInstructions: "",
-      type: ItemType.PROJECT,
-      status: ItemStatus.TODO,
-      priority: Priority.MEDIUM,
-      swimlane: Swimlane.PROJECT,
-      createdByUserId: session.user.id,
-      capturedByUserId: session.user.id,
-      statusHistory: {
-        create: {
-          toStatus: ItemStatus.TODO,
-          changedById: session.user.id
-        }
-      }
+      name: trimmed,
+      content: "",
+      opusType: "PROJECT",
+      createdByUserId: session.user.id
     },
     select: {
       id: true,
-      title: true,
-      status: true,
+      name: true,
       createdAt: true
     }
   })
 
-  return NextResponse.json(project)
+  // Transform to match expected format
+  return NextResponse.json({
+    id: project.id,
+    title: project.name,
+    status: "ACTIVE",
+    createdAt: project.createdAt
+  })
 }
 

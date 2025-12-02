@@ -287,6 +287,7 @@ A comprehensive inventory of project assets, detailing the problem, solution, te
 
 ---
 #### **GIGR (Status: R&D / BANNED)**
+* **Main Concept:** The mission of this project is to get me gigs. AI gigs or AI related gigs are strongly preferred. As a full stack dev, web app developments that don't require AI and other programming developments that don't require AI are also allowed. Underlying the mission is the laser-focused purpose of turning my expertise and my skills into a money-making-machine, as much as possible, and as fast as possible.
 * **Description:** An autonomous AI sales agent. The concept is to build an agent that handles sales activities (which you find boring) on your behalf.
 * **Tech Stack:** (Placeholder)
 * **Strategic Fit:** This is an internal tool. Your *Strategic Review* identifies this as a "trap" to avoid sales activity. It is "Red Light" and **banned** for the rest of the year.

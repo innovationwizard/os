@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { ItemStatus, ItemType, Priority, Swimlane, AnalysisType } from "@prisma/client"
+import { ItemStatus, ItemType, Priority, Swimlane, AnalysisType, OpusType, Feedback } from "@prisma/client"
 import { callAIFiler, callAILibrarian } from "@/lib/ai"
+import { recordDecision, type DecisionState, type DecisionAction } from "@/lib/decision-recorder"
+import { trackItemOutcome } from "@/lib/outcome-tracker"
+import { getStrategicDocumentsForState, getRecentDecisionsForContext } from "@/lib/strategic-context"
+import { getModelVersion } from "@/lib/model-registry"
+import { AgentType } from "@prisma/client"
 
 export async function PATCH(
   request: NextRequest,
@@ -15,9 +20,9 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const { status, type, projectId, routingNotes, title, rawInstructions, swimlane, order } = await request.json()
+  const { status, type, opusId, routingNotes, title, rawInstructions, swimlane, order, userFeedback, userCorrection } = await request.json()
 
-  if (!status && !type && typeof projectId === "undefined" && typeof routingNotes === "undefined" && !title && !rawInstructions && !swimlane && typeof order === "undefined") {
+  if (!status && !type && typeof opusId === "undefined" && typeof routingNotes === "undefined" && !title && !rawInstructions && !swimlane && typeof order === "undefined") {
     return NextResponse.json(
       { error: "Nothing to update" },
       { status: 400 }
@@ -46,8 +51,8 @@ export async function PATCH(
     data.type = type as ItemType
   }
 
-  if (typeof projectId !== "undefined") {
-    data.projectId = projectId || null
+  if (typeof opusId !== "undefined") {
+    data.opusId = opusId || null
   }
 
   if (typeof routingNotes !== "undefined") {
@@ -84,54 +89,103 @@ export async function PATCH(
     data.order = order === null ? null : (typeof order === "number" ? order : parseInt(String(order), 10))
   }
 
+  const previousStatus = existing.status
+  const newStatus = status ? (status as ItemStatus) : previousStatus
+
   let item = await prisma.item.update({
     where: { id },
     data
   })
 
+  // Track outcome if status changed to terminal state
+  if (status && (newStatus === ItemStatus.DONE || newStatus === ItemStatus.COLD_STORAGE)) {
+    // Set completion timestamp if moving to DONE
+    if (newStatus === ItemStatus.DONE && !item.completedAt) {
+      item = await prisma.item.update({
+        where: { id },
+        data: { completedAt: new Date() }
+      })
+    }
+
+    // Track outcome asynchronously (don't block response)
+    // This will update outcomeMetrics for ALL decisions associated with this item
+    // (FILER, LIBRARIAN, PRIORITIZER, STORER, RETRIEVER, etc.)
+    void trackItemOutcome(id)
+      .then((result) => {
+        if (result.updated > 0) {
+          console.log(`[Items API] Tracked outcomes for item ${id}: ${result.updated} decisions updated, ${result.rewardsCalculated} rewards calculated`)
+        }
+      })
+      .catch((error) => {
+        console.error(`[Items API] Failed to track outcome for item ${id}:`, error)
+      })
+  }
+
   if (status) {
+    const statusChangeData: {
+      itemId: string
+      fromStatus: ItemStatus | null
+      toStatus: ItemStatus
+      changedById: string
+      userFeedback?: Feedback
+      userCorrection?: unknown
+    } = {
+      itemId: item.id,
+      fromStatus: existing.status,
+      toStatus: status as ItemStatus,
+      changedById: session.user.id
+    }
+
+    if (userFeedback) {
+      statusChangeData.userFeedback = userFeedback as Feedback
+    }
+
+    if (userCorrection) {
+      statusChangeData.userCorrection = userCorrection
+    }
+
     await prisma.statusChange.create({
-      data: {
-        itemId: item.id,
-        fromStatus: existing.status,
-        toStatus: status as ItemStatus,
-        changedById: session.user.id
-      }
+      data: statusChangeData
     })
   }
 
-  const projectAssigned = typeof projectId !== "undefined" ? projectId : undefined
+  const opusAssigned = typeof opusId !== "undefined" ? opusId : undefined
 
-  if (projectAssigned) {
-    const project = projectAssigned
-      ? await prisma.item.findUnique({
-          where: { id: projectAssigned },
+  if (opusAssigned) {
+    const opus = opusAssigned
+      ? await prisma.opus.findUnique({
+          where: { id: opusAssigned },
           select: {
             id: true,
-            title: true,
-            rawInstructions: true,
-            status: true
+            name: true,
+            content: true,
+            opusType: true
           }
         })
       : null
 
-    const projectsList = await prisma.item.findMany({
+    const opusesList = await prisma.opus.findMany({
       where: {
         createdByUserId: session.user.id,
-        type: ItemType.PROJECT
+        opusType: OpusType.PROJECT
       },
       select: {
         id: true,
-        title: true,
-        rawInstructions: true
+        name: true,
+        content: true
       }
     })
 
     const filerInput = {
       Instructions: item.rawInstructions,
       RoutingNotes: item.routingNotes,
-      Project: project,
-      Projects: projectsList.map((p) => ({ id: p.id, title: p.title })),
+      Project: opus ? {
+        id: opus.id,
+        title: opus.name,
+        rawInstructions: opus.content,
+        status: "ACTIVE"
+      } : null,
+      Projects: opusesList.map((o) => ({ id: o.id, title: o.name })),
       ItemTitle: item.title
     }
 
@@ -162,6 +216,60 @@ export async function PATCH(
 
       const previousStatus = item.status
 
+      // Fetch strategic documents and recent decisions for context
+      const [strategicDocuments, recentDecisions] = await Promise.all([
+        getStrategicDocumentsForState(session.user.id, 5000),
+        getRecentDecisionsForContext(session.user.id, AgentType.FILER)
+      ])
+
+      // Record decision for RL training (Filer schema)
+      const state: DecisionState = {
+        item: {
+          id: item.id,
+          title: item.title,
+          rawInstructions: item.rawInstructions,
+          routingNotes: item.routingNotes
+        },
+        assignedOpus: opus ? {
+          id: opus.id,
+          name: opus.name,
+          opusType: opus.opusType,
+          content: opus.content.substring(0, 1000), // First 1000 chars
+          isStrategic: opus.isStrategic
+        } : null,
+        availableOpuses: opusesList.map(o => ({
+          id: o.id,
+          name: o.name,
+          opusType: o.opusType || "PROJECT"
+        })),
+        strategicDocuments,
+        userContext: {
+          currentTime: new Date().toISOString(),
+          recentDecisions
+        }
+      }
+
+      const action: DecisionAction = {
+        status: nextStatus,
+        swimlane: nextSwimlane,
+        priority: nextPriority,
+        labels: filerResult.labels,
+        confidence: filerResult.confidence,
+        reasoning: filerResult.reasoning
+      }
+
+      const decision = await recordDecision({
+        agentType: AgentType.FILER,
+        state,
+        action,
+        userId: session.user.id,
+        modelVersion: getModelVersion(AgentType.FILER),
+        itemId: item.id,
+        opusId: opus?.id,
+        confidence: filerResult.confidence,
+        reasoning: filerResult.reasoning
+      })
+
       item = await prisma.item.update({
         where: { id: item.id },
         data: {
@@ -179,15 +287,33 @@ export async function PATCH(
             itemId: item.id,
             fromStatus: previousStatus,
             toStatus: nextStatus,
-            changedById: session.user.id
+            changedById: session.user.id,
+            aiReasoning: filerResult.reasoning,
+            aiConfidence: filerResult.confidence
           }
         })
+
+        // Track outcome if item reached terminal state
+        if (nextStatus === ItemStatus.DONE || nextStatus === ItemStatus.COLD_STORAGE) {
+          // Set completion timestamp if moving to DONE
+          if (nextStatus === ItemStatus.DONE && !item.completedAt) {
+            await prisma.item.update({
+              where: { id: item.id },
+              data: { completedAt: new Date() }
+            })
+          }
+
+          // Track outcome asynchronously (don't block response)
+          void trackItemOutcome(item.id).catch((error) => {
+            console.error(`Failed to track outcome for item ${item.id}:`, error)
+          })
+        }
       }
 
       // Kick off librarian analysis without blocking response
       const corpus = await prisma.item.findMany({
         where: {
-          projectId: item.projectId,
+          opusId: item.opusId,
           NOT: { id: item.id }
         },
         select: {
@@ -206,12 +332,57 @@ export async function PATCH(
           title: item.title,
           raw_instructions: item.rawInstructions,
           routing_notes: item.routingNotes,
-          project: project?.title ?? null
+          project: opus?.name ?? null
         },
-        Strategic_Context: project?.rawInstructions ?? "",
+        Strategic_Context: opus?.content ?? "",
         Corpus: corpus
       }).then(async (findings) => {
         if (!findings.length) return
+
+        // Record decision for RL training (Librarian schema)
+        const librarianState: DecisionState = {
+          newItem: {
+            id: item.id,
+            title: item.title,
+            rawInstructions: item.rawInstructions,
+            routingNotes: item.routingNotes,
+            opusId: item.opusId || ""
+          },
+          opus: {
+            id: opus?.id || "",
+            name: opus?.name || "",
+            content: opus?.content || "",
+            isStrategic: opus?.isStrategic || false
+          },
+          corpus: corpus.map(c => ({
+            id: c.id,
+            title: c.title,
+            rawInstructions: c.rawInstructions || "",
+            status: c.status
+          })),
+          strategicDocuments: await getStrategicDocumentsForState(session.user.id, 5000)
+        }
+
+        const librarianAction: DecisionAction = {
+          findings: findings.map(f => ({
+            type: f.type,
+            text: f.text,
+            confidence: 0.8, // TODO: Get from AI response
+            relatedItemIds: [] // TODO: Extract from findings
+          })),
+          reasoning: `Found ${findings.length} findings: ${findings.map(f => f.type).join(", ")}`
+        }
+
+        await recordDecision({
+          agentType: AgentType.LIBRARIAN,
+          state: librarianState,
+          action: librarianAction,
+          userId: session.user.id,
+          modelVersion: getModelVersion(AgentType.LIBRARIAN),
+          itemId: item.id,
+          opusId: opus?.id,
+          reasoning: `Found ${findings.length} findings: ${findings.map(f => f.type).join(", ")}`
+        })
 
         const typeMap: Record<string, AnalysisType> = {
           Conflict: AnalysisType.CONFLICT,
@@ -267,7 +438,7 @@ export async function DELETE(
     where: {
       id,
       createdByUserId: session.user.id,
-      status: ItemStatus.LIBRARY // Only allow deletion of library items
+      status: ItemStatus.COMPENDIUM // Only allow deletion of compendium items
     }
   })
 

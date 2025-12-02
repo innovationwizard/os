@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { Inbox, CheckCircle2, PlayCircle, BarChart3 } from "lucide-react"
 import Link from "next/link"
+import { DecisionsCounter } from "@/components/decisions-counter"
+import { ABTestDashboard } from "@/components/ab-test-dashboard"
 
 interface Stats {
   inbox: number
@@ -31,7 +33,7 @@ export default function HomePage() {
       const stats: Stats = {
         inbox: items.filter((item: { status: string }) => item.status === "INBOX").length,
         inProgress: items.filter((item: { status: string }) => 
-          item.status === "CREATE" || item.status === "IN_REVIEW"
+          item.status === "CREATING" || item.status === "IN_REVIEW"
         ).length,
         completed: items.filter((item: { status: string }) => item.status === "DONE").length,
         total: items.length
@@ -50,10 +52,10 @@ export default function HomePage() {
       <div className="max-w-6xl space-y-6">
         <header>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Welcome to OS
+            Welcome to OCD
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Your AI-powered organization strategy system.
+            Your AI-powered Opus Corpus Documenter system.
           </p>
         </header>
 
@@ -118,6 +120,13 @@ export default function HomePage() {
             </p>
           </Link>
 
+          {/* Training Data Collection Counter */}
+          <DecisionsCounter />
+
+      <div className="mt-8">
+        <ABTestDashboard />
+      </div>
+
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-slate-100 p-2">
@@ -161,7 +170,7 @@ export default function HomePage() {
             href="/library"
             className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
-            <h3 className="text-lg font-semibold text-slate-900">Library</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Compendium</h3>
             <p className="mt-2 text-sm text-slate-600">
               Browse your knowledge base and reference materials.
             </p>

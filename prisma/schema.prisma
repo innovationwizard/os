@@ -15,6 +15,9 @@ model User {
   items         Item[]         @relation("CreatedBy")
   capturedItems Item[]         @relation("CapturedBy")
   statusChanges StatusChange[] @relation("ChangedBy")
+  opuses Opus[] @relation("Opuses")
+  opusTypeConfigs OpusTypeConfig[] @relation("OpusTypeConfigs")
+  decisions     Decision[]     @relation("Decisions")
   createdAt     DateTime       @default(now())
 }
 
@@ -34,11 +37,11 @@ model Item {
   createdBy       User           @relation("CreatedBy", fields: [createdByUserId], references: [id])
   capturedByUserId String?
   capturedBy       User?          @relation("CapturedBy", fields: [capturedByUserId], references: [id])
-  projectId       String?
-  project         Item?          @relation("ProjectItems", fields: [projectId], references: [id])
-  subItems        Item[]         @relation("ProjectItems")
+  opusId          String?
+  opus            Opus?          @relation(fields: [opusId], references: [id])
   analyses        AIAnalysis[]
   statusHistory   StatusChange[]
+  decisions       Decision[]     @relation("Decisions")
   routingNotes    String?        @db.Text
   
   // Freshness tracking
@@ -46,13 +49,13 @@ model Item {
   updatedAt       DateTime       @updatedAt
   statusChangedAt DateTime       @default(now())  // When status last changed
   lastProgressAt  DateTime?                       // Last meaningful progress
-  startedAt       DateTime?                       // When first moved to CREATE
+  startedAt       DateTime?                       // When first moved to CREATING
   completedAt     DateTime?                       // When moved to DONE
   blockedAt       DateTime?                       // When moved to BLOCKED
   
   // Metrics
-  totalTimeInCreate Int?         @default(0)      // Total minutes in CREATE status
-  cycleCount        Int          @default(0)      // Times returned to TODO from CREATE
+  totalTimeInCreate Int?         @default(0)      // Total minutes in CREATING status
+  cycleCount        Int          @default(0)      // Times returned to TODO from CREATING
   
   // Manual ordering within status/swimlane
   order             Int?                           // Manual ordering position (lower = first)
@@ -62,21 +65,85 @@ model Item {
   @@index([swimlane, priority])                   // For kanban queries
   @@index([capturedByUserId, createdAt])
   @@index([status, swimlane, order])              // For manual ordering within columns
+  @@index([opusId])                               // For opus queries
 }
 
 model StatusChange {
-  id         String      @id @default(cuid())
-  itemId     String
-  item       Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  fromStatus ItemStatus?                          // null for initial creation
-  toStatus   ItemStatus
-  changedAt  DateTime    @default(now())
-  changedById String?
-  changedBy   User?      @relation("ChangedBy", fields: [changedById], references: [id])
-  reason      String?                             // Optional: why status changed
-  duration    Int?                                // Minutes in previous status
+  id            String      @id @default(cuid())
+  itemId        String
+  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  fromStatus    ItemStatus?                          // null for initial creation
+  toStatus      ItemStatus
+  changedAt     DateTime    @default(now())
+  changedById   String?
+  changedBy     User?       @relation("ChangedBy", fields: [changedById], references: [id])
+  reason        String?                             // Optional: why status changed
+  duration      Int?                                // Minutes in previous status
+  
+  // AI Training Infrastructure Fields
+  aiReasoning   String?     @db.Text                // Why AI made this decision
+  aiConfidence  Float?                               // AI's confidence score (0.0-1.0)
+  userFeedback  Feedback?                            // User's assessment of AI decision
+  userCorrection Json?                              // What user changed (stores corrected values)
+  outcomeScore  Float?                              // Calculated later based on results
   
   @@index([itemId, changedAt])                    // For history queries
+  @@index([userFeedback])                        // For training data queries
+}
+
+model Decision {
+  id              String       @id @default(cuid())
+  agentType       AgentType
+  
+  // RL Tuple (State, Action, Reward, Next State)
+  state           Json         @db.JsonB            // Complete context at decision time
+  action          Json         @db.JsonB            // Agent's decision output
+  reward          Float?                            // Calculated reward (null until outcome known)
+  nextState       Json?        @db.JsonB            // State after action (for multi-step episodes)
+  
+  // Provenance
+  itemId          String?
+  item            Item?        @relation("Decisions", fields: [itemId], references: [id], onDelete: Cascade)
+  opusId          String?
+  opus            Opus?        @relation("Decisions", fields: [opusId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User         @relation("Decisions", fields: [userId], references: [id])
+  
+  // AI Output Metadata
+  modelVersion    String                             // e.g., "gpt-4.1-mini-20250101" or "ocd-filer-v3"
+  confidence      Float?                            // Agent's confidence score [0,1]
+  reasoning       String?      @db.Text              // Agent's explanation
+  alternativeActions Json?     @db.JsonB            // Other actions considered (for counterfactual learning)
+  
+  // Human Feedback (Reward Signal)
+  userFeedback    Feedback?
+  userCorrection  Json?        @db.JsonB            // What user changed (if corrected)
+  feedbackAt      DateTime?                          // When user provided feedback
+  
+  // Outcome Tracking (Delayed Reward Signal)
+  outcomeMetrics  Json?        @db.JsonB            // Terminal state metrics
+  outcomeObservedAt DateTime?                        // When outcome was measured
+  
+  // Reward Calculation
+  rewardComponents Json?       @db.JsonB            // Breakdown: {immediate: 0.5, outcome: 0.3, strategic: 0.2}
+  rewardComputedAt DateTime?                        // When final reward was calculated
+  
+  // Training Metadata
+  isTrainingData  Boolean      @default(true)       // Include in training set?
+  isValidationData Boolean     @default(false)      // Use for validation?
+  trainingEpoch   Int?                                // Which training run used this
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@index([agentType, createdAt])
+  @@index([itemId])
+  @@index([opusId])
+  @@index([userId])
+  @@index([reward])                                 // For high-reward sampling
+  @@index([isTrainingData])                         // For training queries
+  @@index([agentType, reward])                      // For agent-specific performance analysis
+  @@index([modelVersion, createdAt])                // For A/B testing
 }
 
 model AIAnalysis {
@@ -109,6 +176,45 @@ model SystemMessage {
   createdAt DateTime @default(now())
 }
 
+model Opus {
+  id              String    @id @default(cuid())
+  name            String                                 // Editable name (like Google Doc title)
+  content         String    @default("") @db.Text       // Editable content (like Google Doc body)
+  raisonDetre     String    @default("") @db.Text       // The WHY this Opus exists - most important reason or purpose
+  opusType        String    @default("PROJECT")         // Type of opus (references OpusTypeConfig.key)
+  isStrategic     Boolean   @default(false)             // Contains guiding principles (monetization, portfolio)
+  isDynamic       Boolean   @default(false)             // Requires on-demand customization (like Resume)
+  createdByUserId String
+  createdBy       User      @relation("Opuses", fields: [createdByUserId], references: [id])
+  items           Item[]                                 // Items tagged to this opus
+  decisions       Decision[] @relation("Decisions")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([createdByUserId])
+  @@index([isStrategic])                                 // For AI Librarian queries
+  @@index([opusType])                                    // For opus type queries
+}
+
+model OpusTypeConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique                           // Unique identifier (e.g., "PROJECT", "BOOK", "custom-1")
+  label       String                                     // Display name (e.g., "Project", "Book")
+  icon        String   @default("FolderKanban")          // Icon name from lucide-react
+  color       String   @default("bg-blue-100")           // Tailwind color classes
+  textColor   String   @default("text-blue-700")         // Tailwind text color classes
+  description String?  @db.Text                          // Optional description
+  isBuiltIn   Boolean  @default(false)                   // True for system types, false for user-created
+  isActive    Boolean  @default(true)                    // Can be disabled without deleting
+  createdByUserId String?                                 // null for built-in types
+  createdBy   User?    @relation("OpusTypeConfigs", fields: [createdByUserId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([isBuiltIn])
+}
+
 // Enums
 enum Role {
   CREATOR
@@ -117,18 +223,30 @@ enum Role {
 
 enum ItemType {
   TASK
-  PROJECT
   INFO
+}
+
+// OpusType enum removed - now using OpusTypeConfig table for dynamic type management
+// Keeping enum for backward compatibility in code, but database uses String
+enum OpusType {
+  PROJECT     // Active development project
+  BOOK        // Written work
+  CONTEXT     // Strategic documents
+  CODEBASE    // Software repositories
+  WORKSHOP    // Educational content
+  APPLICATION // Job applications
+  PORTFOLIO   // Portfolio pieces
+  RESEARCH    // Research projects
 }
 
 enum ItemStatus {
   INBOX
   TODO
-  CREATE
+  CREATING
   IN_REVIEW
   BLOCKED
   DONE
-  LIBRARY
+  COMPENDIUM
   ON_HOLD
   COLD_STORAGE
 }
@@ -159,4 +277,20 @@ enum Severity {
   WARNING
   INFO
   SUCCESS
+}
+
+enum Feedback {
+  CONFIRMED
+  CORRECTED
+  IGNORED
+  OVERRIDDEN
+}
+
+enum AgentType {
+  FILER
+  LIBRARIAN
+  PRIORITIZER
+  STORER
+  RETRIEVER
+  GUARDRAIL
 }

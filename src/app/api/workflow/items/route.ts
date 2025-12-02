@@ -6,7 +6,7 @@ import { ItemStatus } from "@prisma/client"
 const WORKFLOW_STATUSES = [
   ItemStatus.TODO,
   ItemStatus.ON_HOLD,
-  ItemStatus.CREATE,
+  ItemStatus.CREATING,
   ItemStatus.IN_REVIEW,
   ItemStatus.BLOCKED,
   ItemStatus.DONE
@@ -26,10 +26,40 @@ export async function GET(request: NextRequest) {
         in: WORKFLOW_STATUSES
       }
     },
-    include: {
+    select: {
+      id: true,
+      humanId: true,
+      title: true,
+      rawInstructions: true,
+      status: true,
+      priority: true,
+      swimlane: true,
+      labels: true,
+      createdAt: true,
+      statusChangedAt: true,
+      order: true,
+      opusId: true,
       createdBy: {
         select: {
           email: true
+        }
+      },
+      statusHistory: {
+        where: {
+          aiReasoning: {
+            not: null
+          }
+        },
+        orderBy: {
+          changedAt: 'desc'
+        },
+        take: 1,
+        select: {
+          id: true,
+          aiReasoning: true,
+          aiConfidence: true,
+          userFeedback: true,
+          userCorrection: true
         }
       }
     },
