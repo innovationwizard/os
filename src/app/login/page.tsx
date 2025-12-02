@@ -100,7 +100,7 @@ function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            WifeApp
+            Opus Corpus Documenter
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -150,7 +150,7 @@ export default function LoginPage() {
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-              WifeApp
+              Opus Corpus Documenter
             </h2>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
