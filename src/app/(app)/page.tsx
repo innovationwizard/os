@@ -14,7 +14,6 @@ interface Stats {
 }
 
 export default function HomePage() {
-  const router = useRouter()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
