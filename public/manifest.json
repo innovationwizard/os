@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/brain.svg",
+      "src": "/message-circle-heart.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/message-circle-heart.svg",
+      "src": "/brain.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
