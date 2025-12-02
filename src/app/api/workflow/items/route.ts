@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       opusId: true,
       createdBy: {
         select: {
-          email: true
+          name: true
         }
       },
       statusHistory: {

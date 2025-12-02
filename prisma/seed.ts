@@ -12,32 +12,32 @@ async function main() {
   const hashedStakeholderPassword = await bcrypt.hash(stakeholderPassword, 10)
   
   const creator = await prisma.user.upsert({
-    where: { email: 'jorgeluiscontrerasherrera@gmail.com' },
+    where: { name: 'condor' },
     update: {
       password: hashedCreatorPassword,
       role: 'CREATOR'
     },
     create: {
-      email: 'jorgeluiscontrerasherrera@gmail.com',
+      name: 'condor',
       password: hashedCreatorPassword,
       role: 'CREATOR'
     }
   })
 
   const wife = await prisma.user.upsert({
-    where: { email: 'stefani121@gmail.com' },
+    where: { name: 'estefani' },
     update: {
       password: hashedStakeholderPassword,
       role: 'STAKEHOLDER'
     },
     create: {
-      email: 'stefani121@gmail.com',
+      name: 'estefani',
       password: hashedStakeholderPassword,
       role: 'STAKEHOLDER'
     }
   })
 
-  console.log('Seed users:', creator.email, wife.email)
+  console.log('Seed users:', creator.name, wife.name)
 
   // Create Opus records for projects
   const portfolioOpus = await prisma.opus.create({

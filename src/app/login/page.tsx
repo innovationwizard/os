@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -56,7 +56,7 @@ function LoginForm() {
       // Determine redirect URL based on user role
       // We'll get the session after sign-in to determine where to redirect
       const result = await signIn("credentials", {
-        email,
+        name,
         password,
         redirect: false,
         callbackUrl: "/", // Default, we'll override after checking session
@@ -64,7 +64,7 @@ function LoginForm() {
 
       if (result?.error) {
         if (result.error === "CredentialsSignin") {
-          setError("Invalid email or password")
+          setError("Invalid name or password")
         } else if (result.error === "MissingCSRF") {
           // This shouldn't happen, but if it does, try again
           setError("Security error: Please try again.")
@@ -111,11 +111,12 @@ function LoginForm() {
           )}
           <div className="space-y-4">
             <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
+              type="text"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name"
+              autoComplete="username"
               required
               className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300"
             />

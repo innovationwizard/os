@@ -9,7 +9,7 @@ interface InboxItem {
   rawInstructions: string
   createdAt: string
   capturedBy?: {
-    email: string | null
+    name: string | null
   } | null
 }
 
@@ -55,7 +55,7 @@ export default function InboxPage() {
         console.log(`[Inbox] All items:`, data.map(item => ({
           id: item.id,
           title: item.title,
-          capturedBy: item.capturedBy?.email,
+          capturedBy: item.capturedBy?.name,
           createdAt: item.createdAt,
           status: 'INBOX' // All items should be INBOX since we filter by status=INBOX
         })))
@@ -172,7 +172,7 @@ export default function InboxPage() {
     )
   }
 
-  const capturedByLabel = currentItem.capturedBy?.email ?? "Creator"
+  const capturedByLabel = currentItem.capturedBy?.name ?? "Creator"
   const createdAt = new Date(currentItem.createdAt).toLocaleString()
 
   return (
@@ -249,9 +249,7 @@ export default function InboxPage() {
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {items.map((item, index) => {
                 const isCurrent = item.id === currentItemId
-                const capturedByLabel = item.capturedBy?.email 
-                  ? item.capturedBy.email.split("@")[0] 
-                  : "Creator"
+                const capturedByLabel = item.capturedBy?.name ?? "Creator"
                 const createdAt = new Date(item.createdAt).toLocaleString()
                 
                 return (
@@ -314,7 +312,7 @@ export default function InboxPage() {
               {JSON.stringify(items.map(item => ({
                 id: item.id,
                 title: item.title,
-                capturedBy: item.capturedBy?.email,
+                capturedBy: item.capturedBy?.name,
                 createdAt: item.createdAt
               })), null, 2)}
             </pre>
@@ -330,7 +328,7 @@ export default function InboxPage() {
 
 // Diagnostic component to check all items
 function AllItemsDiagnostic() {
-  const [allItems, setAllItems] = useState<Array<{ id: string; title: string; status: string; capturedBy?: { email: string | null } | null; createdAt: string }>>([])
+  const [allItems, setAllItems] = useState<Array<{ id: string; title: string; status: string; capturedBy?: { name: string | null } | null; createdAt: string }>>([])
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
@@ -384,7 +382,7 @@ function AllItemsDiagnostic() {
                 <ul className="mt-1 space-y-1 text-xs text-slate-600">
                   {statusItems.slice(0, 5).map((item) => (
                     <li key={item.id} className="truncate">
-                      • {item.title} {item.capturedBy?.email ? `(by ${item.capturedBy.email.split("@")[0]})` : ""} - {new Date(item.createdAt).toLocaleString()}
+                      • {item.title} {item.capturedBy?.name ? `(by ${item.capturedBy.name})` : ""} - {new Date(item.createdAt).toLocaleString()}
                     </li>
                   ))}
                   {statusItems.length > 5 && (

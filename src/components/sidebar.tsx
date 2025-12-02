@@ -27,7 +27,7 @@ const navItems = [
 
 interface SidebarProps {
   user?: {
-    email?: string | null
+    name?: string | null
     role?: string | null
   }
 }
@@ -93,7 +93,7 @@ export function Sidebar({ user }: SidebarProps) {
           </span>
           <div className="min-w-0">
             <div className="truncate text-sm font-medium text-slate-900">
-              {user?.email ?? "Signed in"}
+              {user?.name ?? "Signed in"}
             </div>
             {user?.role && (
               <div className="truncate text-xs text-slate-500">

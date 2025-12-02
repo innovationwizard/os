@@ -8,7 +8,7 @@ interface InboxItem {
   title: string
   rawInstructions: string
   capturedBy?: {
-    email: string | null
+    name: string | null
   } | null
   routingNotes?: string | null
 }
@@ -215,7 +215,7 @@ export default function CleanPage() {
     )
   }
 
-  const capturedByLabel = currentItem.capturedBy?.email ?? "Creator"
+  const capturedByLabel = currentItem.capturedBy?.name ?? "Creator"
 
   return (
     <div className="px-4 py-8 sm:px-6">
@@ -365,9 +365,7 @@ export default function CleanPage() {
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {items.map((item, index) => {
                 const isCurrent = item.id === currentItemId
-                const capturedByLabel = item.capturedBy?.email 
-                  ? item.capturedBy.email.split("@")[0] 
-                  : "Creator"
+                const capturedByLabel = item.capturedBy?.name ?? "Creator"
                 
                 return (
                   <button

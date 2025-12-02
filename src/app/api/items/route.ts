@@ -95,14 +95,14 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "desc" },
     include: {
       capturedBy: {
-        select: { email: true }
+        select: { name: true }
       }
     }
   })
 
   // Enhanced logging to debug missing items
   console.log(`[GET /api/items] Query:`, JSON.stringify(whereClause, null, 2))
-  console.log(`[GET /api/items] User: ${session.user.id} (${session.user.email}), role: ${session.user.role}`)
+  console.log(`[GET /api/items] User: ${session.user.id} (${session.user.name}), role: ${session.user.role}`)
   console.log(`[GET /api/items] Found ${items.length} items, status: ${status || "all"}, capturedBy: ${capturedBy || "all"}`)
   
   if (items.length > 0) {
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       status: item.status,
       createdByUserId: item.createdByUserId,
       capturedByUserId: item.capturedByUserId,
-      capturedBy: item.capturedBy?.email,
+      capturedBy: item.capturedBy?.name,
       createdAt: item.createdAt,
       statusChangedAt: item.statusChangedAt
     })))
