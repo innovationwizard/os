@@ -174,7 +174,8 @@ export async function PATCH(
       select: {
         id: true,
         name: true,
-        content: true
+        content: true,
+        opusType: true
       }
     })
 
