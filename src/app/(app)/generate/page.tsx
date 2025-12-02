@@ -64,16 +64,12 @@ export default function GeneratePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
-          requestType,
           parameters,
           relevantOpuses: selectedOpuses.map(id => {
             const opus = opuses.find(o => o.id === id)
             return opus ? {
               id: opus.id,
-              name: opus.name,
-              content: "", // Would need to fetch full content
-              opusType: opus.opusType,
-              relevanceScore: 1.0
+              name: opus.name
             } : null
           }).filter(Boolean)
         })

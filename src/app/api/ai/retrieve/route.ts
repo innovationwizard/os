@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { query, requestType, parameters, relevantOpuses } = await request.json()
+    const { query, parameters, relevantOpuses } = await request.json()
 
     if (!query || !relevantOpuses || relevantOpuses.length === 0) {
       return NextResponse.json(
@@ -38,19 +38,13 @@ export async function POST(request: NextRequest) {
 
     const input: RetrieverInput = {
       query,
-      requestType: requestType || "GENERATE_DOCUMENT",
       parameters: parameters || {},
       relevantOpuses: opuses.map(opus => ({
         id: opus.id,
         name: opus.name,
         content: opus.content,
-        opusType: opus.opusType,
-        relevanceScore: 1.0
-      })),
-      userHistory: {
-        previousQueries: [],
-        preferredSources: []
-      }
+        opusType: opus.opusType
+      }))
     }
 
     const result = await callAIRetriever(input, session.user.id)
