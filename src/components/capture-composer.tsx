@@ -78,6 +78,8 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [images, setImages] = useState<string[]>([]) // Array of base64 image data URLs
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const queueLoadedRef = useRef(false)
   const queueRef = useRef<QueueItem[]>([])
@@ -412,14 +414,66 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     return Math.random().toString(36).slice(2)
   }
 
+  const handleImageSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        console.warn("Skipping non-image file:", file.name)
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string
+        if (dataUrl) {
+          setImages((prev) => [...prev, dataUrl])
+        }
+      }
+      reader.onerror = () => {
+        console.error("Failed to read image file")
+      }
+      reader.readAsDataURL(file)
+    })
+
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }, [])
+
+  const handleImageRemove = useCallback((index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  const handleCameraCapture = useCallback(() => {
+    // Trigger the camera input which will use native camera on mobile
+    cameraInputRef.current?.click()
+  }, [])
+
   const enqueueCapture = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
-      if (!trimmed) return
+      // Allow capture even if only images (no text)
+      if (!trimmed && images.length === 0) return
+
+      // Combine text and images into content
+      let finalContent = trimmed
+      if (images.length > 0) {
+        const imageMarkdown = images
+          .map((img, idx) => `![Image ${idx + 1}](${img})`)
+          .join("\n\n")
+        finalContent = trimmed
+          ? `${trimmed}\n\n${imageMarkdown}`
+          : imageMarkdown
+      }
 
       const entry: QueueItem = {
         id: generateId(),
-        content: trimmed,
+        content: finalContent,
         createdAt: new Date().toISOString()
       }
 
@@ -460,14 +514,16 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
     }
 
     const trimmed = input.trim()
-    if (!trimmed) return
+    if (!trimmed && images.length === 0) return
 
     await enqueueCapture(trimmed)
     setInput("")
+    setImages([])
   }
 
   const handleClear = () => {
     setInput("")
+    setImages([])
     liveTranscriptRef.current = ""
     setVoiceStatus(null)
     skipClickRef.current = false
@@ -598,6 +654,63 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
           className={textareaClasses}
         />
 
+        {/* Image previews */}
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {images.map((img, idx) => (
+              <div key={idx} className="relative">
+                <img
+                  src={img}
+                  alt={`Captured ${idx + 1}`}
+                  className="h-24 w-24 rounded-lg object-cover border border-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleImageRemove(idx)}
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center hover:bg-rose-600"
+                  aria-label="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Image capture buttons */}
+        <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageSelect}
+            className="hidden"
+            id="image-input"
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleImageSelect}
+            className="hidden"
+            id="camera-input"
+          />
+          <label
+            htmlFor="image-input"
+            className="flex-1 cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 text-center"
+          >
+            📷 Select Images
+          </label>
+          <label
+            htmlFor="camera-input"
+            className="flex-1 cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 text-center"
+          >
+            📸 Camera
+          </label>
+        </div>
+
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span
             className={
@@ -645,7 +758,7 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
         >
           {isRecording
             ? "Listening…"
-            : input.trim()
+            : input.trim() || images.length > 0
               ? (variant === "pwa" ? "Click, and it shall be done!" : "Capture")
               : (variant === "pwa" ? "Your command, milady?" : "Hold to capture voice")}
         </button>
@@ -659,8 +772,8 @@ export function CaptureComposer({ variant = "full" }: CaptureComposerProps) {
           )}
         </div>
 
-        {/* Clear button - only show when there's text in the input */}
-        {input.trim().length > 0 && !isRecording && (
+        {/* Clear button - show when there's text or images */}
+        {(input.trim().length > 0 || images.length > 0) && !isRecording && (
           <button
             type="button"
             onClick={handleClear}
