@@ -58,6 +58,7 @@ async function generateAllIcons() {
         input: iconResized,
         gravity: 'center'
       }])
+      .removeAlpha() // Ensure no alpha channel - solid RGB
       .png({
         compressionLevel: 9,
         quality: 100
@@ -94,7 +95,7 @@ async function generateAllIcons() {
       input: iconBuffer,
       gravity: 'center'
     }])
-    .removeAlpha()
+    .removeAlpha() // Ensure no alpha channel - solid RGB
     .png({
       compressionLevel: 9,
       quality: 100
