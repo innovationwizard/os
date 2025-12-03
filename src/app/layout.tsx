@@ -3,7 +3,7 @@ import "./globals.css"
 import { Providers } from "@/components/providers"
 
 const title = "OCD – Opus Corpus Documenter"
-const description = "AI-powered capture, routing, and kanban intelligence."
+const description = "AI-Powered Creative Process Accelerator Engine, from Idea to Completion."
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://opuscorpus.vercel.app"
 const imageUrl = `${baseUrl}/og-image.png`
 const iconUrl = "/favicon-32x32.png"
