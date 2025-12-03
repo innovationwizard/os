@@ -35,7 +35,7 @@ Your time is now split between two distinct, competing objectives. Your "Resourc
 
 ### **2\. Analysis of New "Idea Backlog"**
 
-This list must be understood not as a "to-do" list, but as a "distraction inventory" to be triaged.
+This list must be understood not as a "to-do" list, but as a "distraction inventory" to be chosen.
 
 | Project | Category | Status |
 | :---- | :---- | :---- |
@@ -64,7 +64,7 @@ Your problem is not a lack of ideas or technical skill. Your problem is a lack o
    * **P1: Content Creation** (1-2 hours) \- FIRST. Nothing before this.  
    * **P2: GitHub Green** (30 min) \- Push *all* work from the previous day. This is a non-negotiable habit.  
    * **P3: Income Engine** \- Work on IngePro / AI Refill / Cotizator.  
-3. **Triage the Backlog:**  
+3. **Choose the Backlog:**  
    * **This Week:** Build and deliver the Cotizator MVP. Get it off your mind.  
    * **This Week:** Write your Context Documents.  
    * **December:** Schedule Tragaldabas development.  

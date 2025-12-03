@@ -65,7 +65,7 @@ OCD is not a tool; it's an operating system with agents and rules. It is designe
 **Unique mechanisms OCD provides:**
 
 1. **The "Stakeholder-to-Inbox" Pipeline:**
-   - **The Problem:** Your wife needs to assign tasks ("interrupt"), but you need to Clean and Triage them to protect your focus.
+   - **The Problem:** Your wife needs to assign tasks ("interrupt"), but you need to Clean and Choose them to protect your focus.
    - **The "OCD" Mechanism:** OCD ingests interruptions without being interrupted. Her app writes to your Inbox, not your Kanban. The system architecture itself resolves your core "Wife App" conflict. No off-the-shelf tool does this.
 
 2. **The "AI Filer" (Highest Autonomy Intake):**
@@ -136,7 +136,7 @@ End stage: **Opus Corpus** (the complete collection of opuses - final definition
 A rough draft exists at `opus system.txt` that outlines:
 - STEP 1: CAPTURE → Inbox
 - STEP 2: CLEAN (Clarify) → Create/On Hold/Compendium/Trash
-- STEP 3: TRIAGE (Manual Prioritization)
+- STEP 3: CHOOSE (Manual Prioritization)
 - STEP 4: CREATE (Deep Work, WIP=1 enforced)
 - STEP 5: PUBLISH (Done - mentions integration with Opus Corpus)
 - STEP 6: RETROSPECTIVE (Meta-improvements)
@@ -303,7 +303,7 @@ The question to answer is very simple and direct: **"Is this actionable?"**
 
 ---
 
-**STEP 3: TRIAGE (Manual Prioritization)**
+**STEP 3: CHOOSE (Manual Prioritization)**
 
 - **No AI needed.** This is an "Expertise Decision" and it can stay like that.
 - **In real life:** Some days the user just wakes up inspired to tackle ONE specific item, and that's that (intuitive/emotional decision).
@@ -395,7 +395,7 @@ The question to answer is very simple and direct: **"Is this actionable?"**
 - **Kanban Review:** Look at the Done column. What was the throughput?
 - **Friction Review:** Look at the Blocked items. What was the real reason they were blocked?
 - **Interruption Review:** Look at the Expedite swimlane. How many interruptions sidetracked the user? Can this be reduced?
-- **Triage Review:** Look at the On Hold list. Should any of these be promoted to the Workflow or moved to Cold Storage?
+- **Choose Review:** Look at the On Hold list. Should any of these be promoted to the Workflow or moved to Cold Storage?
 
 **System Action (The "What"):** The output of this step is a set of new Items for improving the system itself. The AI captures these new "meta-tasks" (e.g., "Tune AI Filer prompt to better handle 'Habit' tasks" or "Add a new Rule to the AI Guardrail") which then enter the user's Inbox to be processed in the next Clean cycle, just like any other task.
 

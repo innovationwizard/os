@@ -80,7 +80,7 @@ export default function HomePage() {
               </div>
             </div>
             <p className="mt-2 text-xs text-slate-400">
-              Items waiting for triage
+              Items waiting for choose
             </p>
           </Link>
 

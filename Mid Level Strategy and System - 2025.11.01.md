@@ -6,7 +6,7 @@
 
 ## 1. Idea Backlog (Distraction Inventory)
 
-This inventory triages all active and "moonshot" project ideas against the primary goals from the "Strategic Review - Nov 2025." The status (Green/Yellow/Red) dictates priority.
+This inventory chooses all active and "moonshot" project ideas against the primary goals from the "Strategic Review - Nov 2025." The status (Green/Yellow/Red) dictates priority.
 
 | Project | Category | Status | Analysis (Based on *Strategic Review*) |
 | :--- | :--- | :--- | :--- |

@@ -7,7 +7,7 @@ This is a hybrid system that blends world-class methodologies, adapted to optimi
 
 	David Allen added "Clarify" as a separate, mandatory step because his system is built for task management. You cannot organize an item until you have first decided what it is.
 
-	"Clarify" is the non-negotiable triage step where you ask the most important question in GTD: "Is this actionable?"
+	"Clarify" is the non-negotiable choose step where you ask the most important question in GTD: "Is this actionable?"
 
 	This one decision dictates the item's entire lifecycle:
 
@@ -73,7 +73,7 @@ STEP 2: CLEAN:
 		2.3 Comment (Optional): Write additional information. 
 		2.4 Send to next step.
 
-STEP 3: TRIAGE (Manual Prioritization):
+STEP 3: CHOOSE (Manual Prioritization):
 	Job: Strategically select the one task for the next Deep Work session.
 	Method: Expertise Decision. The Creator reviews the Kanban board (all swimlanes and priorities).
 	System Action: User pulls one Item from a To Do column into the CREATING column. This is the explicit start signal.
@@ -95,7 +95,7 @@ STEP 6: RETROSPECTIVE:
 		- Kanban Review: Look at your Done column. What was your throughput?
 		- Friction Review: Look at your Blocked items. What was the real reason they were blocked?
 		- Interruption Review: Look at the Expedite swimlane. How many interruptions sidetracked you? Can this be reduced?
-		- Triage Review: Look at your On Hold list. Should any of these be promoted to the Workflow or moved to Cold Storage?
+		- Choose Review: Look at your On Hold list. Should any of these be promoted to the Workflow or moved to Cold Storage?
 	System Action (The "What"): The output of this step is a set of new Items for improving the system itself. You Capture these new "meta-tasks" (e.g., "Tune AI Filer prompt to better handle 'Habit' tasks" or "Add a new Rule to the AI Guardrail") which then enter your Inbox to be processed in the next Clean cycle, just like any other task.
 
 
