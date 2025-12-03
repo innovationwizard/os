@@ -17,12 +17,12 @@ import {
 import { signOut } from "next-auth/react"
 
 const navItems = [
-  { href: "/capture", label: "Capture", icon: PenSquare },
-  { href: "/clean", label: "Clean", icon: Filter },
-  { href: "/workflow", label: "Workflow", icon: LayoutIcon },
+  { href: "/capture", label: "CAPTURE", icon: PenSquare },
+  { href: "/clean", label: "CLEAN", icon: Filter },
+  { href: "/workflow", label: "CREATE", icon: LayoutIcon },
   { href: "/library", label: "Compendium", icon: Library },
-  { href: "/generate", label: "Generate", icon: Sparkles },
-  { href: "/", label: "Overview", icon: Home }
+  { href: "/generate", label: "Compose", icon: Sparkles },
+  { href: "/", label: "Command Center", icon: Home }
 ]
 
 interface SidebarProps {
@@ -50,7 +50,7 @@ export function Sidebar({ user }: SidebarProps) {
         </span>
         <div>
           <div className="text-sm font-semibold tracking-wide text-slate-500">
-            OCD
+            
           </div>
           <div className="text-lg font-semibold text-slate-900">
             Opus Corpus Documenter
