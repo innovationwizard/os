@@ -33,12 +33,31 @@ async function generateAllIcons() {
   for (const icon of iconSizes) {
     const outputPath = path.join(publicDir, icon.name);
     
-    await sharp(svgBuffer)
+    // Create white background first
+    const whiteBg = sharp({
+      create: {
+        width: icon.size,
+        height: icon.size,
+        channels: 3,
+        background: { r: 255, g: 255, b: 255 }
+      }
+    });
+    
+    // Resize SVG icon
+    const iconResized = await sharp(svgBuffer)
       .resize(icon.size, icon.size, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
+        background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent for compositing
       })
-      .removeAlpha() // Ensure no transparency
+      .png()
+      .toBuffer();
+    
+    // Composite icon on white background
+    await whiteBg
+      .composite([{
+        input: iconResized,
+        gravity: 'center'
+      }])
       .png({
         compressionLevel: 9,
         quality: 100
