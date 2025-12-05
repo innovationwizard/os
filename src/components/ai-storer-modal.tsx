@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { X, FileText, CheckCircle2, XCircle, Loader2, Edit } from "lucide-react"
 import { GitSyncModal } from "./git-sync-modal"
-import { generateCommitMessage } from "@/lib/git-sync"
+import { generateCommitMessage } from "@/lib/git-utils"
 
 interface CompletedItem {
   id: string
