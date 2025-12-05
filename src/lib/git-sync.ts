@@ -31,7 +31,7 @@ export interface GitStatus {
   modified?: string[]
   created?: string[]
   deleted?: string[]
-  renamed?: string[]
+  renamed?: Array<{ from: string; to: string }>
   conflicted?: string[]
   error?: string
 }
